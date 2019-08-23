@@ -1,13 +1,10 @@
 name: Node CI
 
-on:
-  push:
-    branches:
-    - '!master'
+on: [push]
 
 jobs:
   build:
-
+    name: checkout and test
     runs-on: ubuntu-latest
 
     strategy:
@@ -27,3 +24,21 @@ jobs:
         npm test
       env:
         CI: true
+
+  deploy:
+    needs: build
+    name: deploy to serverless
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: only on master branch filter
+      uses: actions/bin/filter@master
+      with:
+        args: "branch master" 
+    - name: deploy the app via serverless
+      env:
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      uses: serverless/github-action@master
+      with:
+        args: deploy

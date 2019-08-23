@@ -1,0 +1,20 @@
+name: Serverless deploy
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+    name: deploy to serverless
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: deploy the app via serverless
+      env:
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      uses: serverless/github-action@master
+      with:
+        args: deploy

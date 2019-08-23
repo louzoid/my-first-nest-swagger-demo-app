@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # surely there is a better way of doing this
     - name: only on master branch filter
       uses: actions/bin/filter@master
       with:

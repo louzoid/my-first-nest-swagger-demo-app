@@ -3,7 +3,7 @@ import { Cat } from './cat';
 
 @Injectable()
 export class CatsService {
-    cats: Array<Cat> = [{ id: 1, name: 'Cat'}];
+    cats: Cat[] = [{ id: 1, name: 'Cat'}];
 
     getCats() {
         return this.cats;

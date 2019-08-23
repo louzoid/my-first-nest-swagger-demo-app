@@ -7,4 +7,7 @@ export class Cat {
 
     @ApiModelProperty()
     name: string;
+    
+    @ApiModelProperty()
+    age: number;
 }

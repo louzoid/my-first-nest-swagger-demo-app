@@ -25,10 +25,14 @@ jobs:
       env:
         CI: true
     - name: deploy to serverless
-      if: success() && github.ref == 'master'
+      if: success() && github.ref == 'refs/heads/master'
       env:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       uses: serverless/github-action@master
       with:
         args: deploy
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"

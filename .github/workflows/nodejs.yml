@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    name: checkout and test
+    name: checkout test and deploy if master
     runs-on: ubuntu-latest
 
     strategy:
@@ -24,19 +24,8 @@ jobs:
         npm test
       env:
         CI: true
-
-  deploy:
-    needs: build
-    name: deploy to serverless
-    runs-on: ubuntu-latest
-
-    steps:
-    # surely there is a better way of doing this
-    - name: only on master branch filter
-      uses: actions/bin/filter@master
-      with:
-        args: "branch master" 
-    - name: deploy the app via serverless
+    - name: deploy to serverless
+      if: success() && github.ref == 'master'
       env:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

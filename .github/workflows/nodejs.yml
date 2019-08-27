@@ -32,7 +32,3 @@ jobs:
       uses: serverless/github-action@master
       with:
         args: deploy
-    - name: Dump GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"

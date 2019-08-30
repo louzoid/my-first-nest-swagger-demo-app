@@ -1,38 +1,39 @@
-// lambda.ts
-import { Handler, Context } from 'aws-lambda';
-import { Server } from 'http';
-import { createServer, proxy } from 'aws-serverless-express';
-import { eventContext } from 'aws-serverless-express/middleware';
-
+import { Context, Handler } from 'aws-lambda';
 import { NestFactory } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-
-const express = require('express');
-
-// NOTE: If you get ERR_CONTENT_DECODING_FAILED in your browser, this
-// is likely due to a compressed response (e.g. gzip) which has not
-// been handled correctly by aws-serverless-express and/or API
-// Gateway. Add the necessary MIME types to binaryMimeTypes below
-const binaryMimeTypes: string[] = [];
+import { Server } from 'http';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import * as serverless from 'aws-serverless-express';
+import * as express from 'express';
+//import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { swaggerInit } from './swagger';
 
 let cachedServer: Server;
 
-// Create the Nest.js server and convert it into an Express.js server
-async function bootstrapServer(): Promise<Server> {
-    if (!cachedServer) {
-        const expressApp = express();
-        const nestApp = await NestFactory.create(AppModule, new ExpressAdapter(expressApp))
-        nestApp.use(eventContext());
-        await nestApp.init();
-        cachedServer = createServer(expressApp, undefined, binaryMimeTypes);
-        //the swagger stuff won't work with this setup but that's cool for now
-    }
-    return cachedServer;
+function bootstrapServer(): Promise<Server> {
+    const expressApp = express();
+    const adapter = new ExpressAdapter(expressApp);
+    return NestFactory.create(AppModule, adapter)
+        .then(app => app.enableCors())
+        .then(app => {
+            swaggerInit(app);
+            return app;
+        })
+        .then(app => app.init())
+        .then((app) => { return serverless.createServer(expressApp) });
 }
 
-// Export the handler : the entry point of the Lambda function
-export const handler: Handler = async (event: any, context: Context) => {
-    cachedServer = await bootstrapServer();
-    return proxy(cachedServer, event, context, 'PROMISE').promise; //test change
-}
+export const handler: Handler = (event: any, context: Context) => {
+    //major hack to get round slash stripping behaviour
+    if (event.path === '/api') {
+        event.path = '/api/';
+    }
+    if (!cachedServer) {
+        bootstrapServer().then(server => {
+            cachedServer = server;
+            return serverless.proxy(server, event, context);
+        });
+    } else {
+        return serverless.proxy(cachedServer, event, context);
+    }
+};

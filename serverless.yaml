@@ -15,6 +15,8 @@ functions:
  main: # The name of the lambda function
    # The module 'handler' is exported in the file 'src/lambda'
    handler: src/lambda.handler
+   optimize:
+    includePaths: ['node_modules/swagger-ui-express']
    events:
      - http:
           path: /
